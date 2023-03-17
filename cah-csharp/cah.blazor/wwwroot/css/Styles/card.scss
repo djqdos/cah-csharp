@@ -1,0 +1,72 @@
+.card {
+    font-family: 'HelveticaNeueBold';
+    font-size: .8em;
+    width: 140px;    
+    height: 180px;    
+    padding: 1em;
+    border-radius: 5px;
+    position: relative;
+}
+
+.card img {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    height: 15px;
+}
+
+.black-card {
+    background-color: black;
+    color: white;
+}
+
+.white-card {
+    background-color: white;
+    color: black;
+    display: block;
+    box-shadow: 1px 1px 1px black;
+    transition: transform .2s ease;
+}
+
+.white-card-anim:hover {
+    cursor: pointer;
+    transform: scale(1.1, 1.1) rotate(-4deg);
+}
+
+
+.userCards {
+    display: flex;
+}
+
+.userCardToPick {
+    border: dashed 2px green;
+    display: inline-block;
+    width: 140px;
+    height: 180px;
+    border-radius: 5px;
+    margin-right: 1em;
+
+    > div:hover {
+        cursor: pointer;
+        transform: scale(1,1) rotate(0);
+    }
+}
+
+.droppable {
+    background-image: linear-gradient(45deg, #686968 25%, #4a4a4a 25%, #4a4a4a 50%, #686968 50%, #686968 75%, #4a4a4a 75%, #4a4a4a 100%);
+    background-size: 28.28px 28.28px;
+}
+
+.currentSelected {
+    opacity: .3;
+
+    &:hover {
+        transform: scale(1, 1) rotate(0deg);
+    }
+}
+
+
+.droppable {
+    background-image: linear-gradient(45deg, #686968 25%, #4a4a4a 25%, #4a4a4a 50%, #686968 50%, #686968 75%, #4a4a4a 75%, #4a4a4a 100%);
+    background-size: 28.28px 28.28px;
+}

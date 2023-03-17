@@ -1,0 +1,143 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client
+@using cah.models
+@using SocketConstants
+
+@inject NavigationManager NavigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorage;
+@implements IAsyncDisposable
+
+
+        <div class="chat-global-container">    
+            <div class="chat-container">
+                <div class="chat">
+
+                    @foreach (var userMessage in userMessages)
+                    {
+                        if (userMessage.UserName == SocketConstantHelpers.ChatBotName)
+                        {
+                            <div class="chat-message chat-bot">
+                                <span class="chat-name">@userMessage.UserName</span>
+                                <span class="time">@userMessage.DateSent</span>
+                                <div class="msg">@userMessage.Message</div>
+                            </div>
+                }
+                        else
+                        {
+                            <div class="chat-message @(@userMessage.CurrentUser ? "current-user" : "")">
+                                <span class="chat-name">@userMessage.UserName</span>
+                                <span class="time">@userMessage.DateSent</span>
+                                <div class="msg">@userMessage.Message</div>
+                            </div>
+                        }
+                    }
+
+                </div>
+                <div class="message-container">                    
+                    <input type="text" @bind="messageInput"  />
+                    <button type="button" @onclick="Send" >Send</button>
+                </div>                  
+                 
+            </div>
+        </div>
+     
+ 
+
+@code {
+    private HubConnection hubConnection;
+    private List<UserMessage> userMessages = new List<UserMessage>();    
+    private string messageInput;
+    private bool isUserReadOnly = false;
+    private string userName;
+
+    public ChatComponent()
+    {
+
+    }
+
+    public bool IsConnected => hubConnection.State == HubConnectionState.Connected;
+
+    protected override async Task OnInitializedAsync()
+    {
+        userName = await localStorage.GetItemAsStringAsync("usernameCookie");
+
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            NavigationManager.NavigateTo("/join");
+        }
+
+
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri($"/chathub?username={userName}"))
+            .Build();
+
+        hubConnection.On<string, string>(SocketConstantHelpers.RecieveMessage, (user, message) =>
+        {
+            userMessages.Add(new UserMessage
+            {
+                UserName = user,
+                Message = message,
+                CurrentUser = user == userName,
+                DateSent = DateTime.Now
+            });
+
+            InvokeAsync(() => StateHasChanged());
+        });
+
+
+        hubConnection.On<string, string>(SocketConstantHelpers.UserJoined, (user, message) =>
+        {
+            userMessages.Add(new UserMessage
+                {
+                    UserName = user,
+                    Message = message,
+                    CurrentUser = user == userName,
+                    DateSent = DateTime.Now
+                });
+
+            InvokeAsync(() => StateHasChanged());
+        });
+
+
+        hubConnection.On<string, string>(SocketConstantHelpers.UserLeft, (user, message) =>
+        {
+            userMessages.Add(new UserMessage
+                {
+                    UserName = user,
+                    Message = message,
+                    CurrentUser = user == userName,
+                    DateSent = DateTime.Now
+                });
+
+            InvokeAsync(() => StateHasChanged());
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+
+
+    }
+
+    private async Task Send()
+    {
+        if (!string.IsNullOrWhiteSpace(userName) && !string.IsNullOrWhiteSpace(messageInput))
+        {
+            await hubConnection.SendAsync("SendMessage", userName, messageInput);
+
+            isUserReadOnly = true;
+            messageInput = string.Empty;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection != null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

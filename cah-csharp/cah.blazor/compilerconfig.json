@@ -1,0 +1,14 @@
+﻿[
+  {
+    "outputFile": "wwwroot/css/Styles/_layout.css",
+    "inputFile": "wwwroot/css/Styles/_layout.scss"
+  },
+  {
+    "outputFile": "wwwroot/css/Styles/app.css",
+    "inputFile": "wwwroot/css/Styles/app.scss"
+  },
+  {
+    "outputFile": "Components/Game/Game.razor.css",
+    "inputFile": "Components/Game/Game.razor.scss"
+  }
+]
