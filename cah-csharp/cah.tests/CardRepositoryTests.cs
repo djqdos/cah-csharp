@@ -105,5 +105,20 @@ namespace cah.tests
             // Assert
             await act.Should().ThrowAsync<Exception>();
         }
+
+
+        [Fact]
+        public async Task GetSetList__ShouldReturnListOfSets()
+        {
+            // Arrange
+            var sut = new CardsRepository();
+
+            // Act
+            var response = await sut.GetSets();
+
+            // Assert
+            response.Should().NotBeNull();
+            response.Should().HaveCountGreaterThan(0);
+        }
     }
 }

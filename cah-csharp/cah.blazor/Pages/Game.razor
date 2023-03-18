@@ -22,43 +22,51 @@
 		<div class="container">
 
 			<div id="game" class="center-grid">
-			<div class="dealtCards">
-				<div class="topgrid">
-					
-					<cah.blazor.Components.BlackCardComponent.BlackCardComponent BlackCard="_blackCard" />
-					@if (_blackCard != null)
-					{
-							@for (var i = 0; i < _blackCard.pick; i++)
-						{
-							<div class="userCards 1col">
-								<div class="userCardToPick card @dropClass"
-			 id="userCard-@i"
-			 ondragover="event.preventDefault();"
-			 ondragstart="event.dataTransfer.setData('', event.target.id);"
+
+
+				@if (_blackCard != null && _cards != null)
+				{
+					<div class="dealtCards">
+						<div class="topgrid">
+
+							<cah.blazor.Components.BlackCardComponent.BlackCardComponent BlackCard="_blackCard" />
+							@if (_blackCard != null)
+							{
+								@for (var i = 0; i < _blackCard.pick; i++)
+								{
+									<div class="userCards 1col">
+										<div class="userCardToPick card @dropClass"
+					 id="userCard-@i"
+					 ondragover="event.preventDefault();"
+					 ondragstart="event.dataTransfer.setData('', event.target.id);"
 								 @ondrop="HandleDrop"
 								 @ondragenter="HandleDragEnter"
 								 @ondragleave="HandleDragLeave"></div>
+									</div>
+								}
+							}
+
+
+							<button>asdasdsa</button>
+						</div>
+						@if (_cards != null)
+						{
+							<div class="white-card-container">
+
+								@foreach (var card in _cards)
+								{
+									<cah.blazor.Components.WhiteCardComponent.WhiteCardComponent WhiteCard="card"
+																					 OnHandleDragStart="SelectedCard" />
+								}
+
 							</div>
 						}
-					}
-					
-
-					<button>asdasdsa</button>
-				</div>
-				@if (_cards != null)
-				{
-					<div class="white-card-container">
-
-						@foreach (var card in _cards)
-						{
-							<cah.blazor.Components.WhiteCardComponent.WhiteCardComponent 
-								WhiteCard="card" 
-								OnHandleDragStart="SelectedCard"/>
-						}
-
 					</div>
 				}
-			</div>
+				else
+				{
+					<p>No cards loaded</p>
+				}
 			</div>
 
 			<cah.blazor.Components.ChatComponent.ChatComponent />
@@ -77,8 +85,8 @@
 	protected override async Task OnInitializedAsync()
 	{
 
-		_cards = await _cardService.GetRandomWhiteCards("CAH Base Set", 1);
-		_blackCard = await _cardService.GetRandomBlackCard("CAH Base Set");
+		//_cards = await _cardService.GetRandomWhiteCards("CAH Base Set", 1);
+		//_blackCard = await _cardService.GetRandomBlackCard("CAH Base Set");
 
 		hubConnection.On<GameUser>(SocketConstantHelpers.PersonalGameCards, (personalGameCards) =>
 		{

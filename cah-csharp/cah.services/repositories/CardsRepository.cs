@@ -27,6 +27,11 @@ namespace cah.services.repositories
         }
 
 
+        /// <summary>
+        /// Gets a random black card from the selected set.
+        /// </summary>
+        /// <param name="setId"></param>
+        /// <returns></returns>
         public async Task<BlackCard> GetRandomBlackCard(string setId)
         {
             try
@@ -55,6 +60,15 @@ namespace cah.services.repositories
         }
 
 
+
+        /// <summary>
+        /// Gets random white cards from the selected set.
+        /// Picks GameSettings.CardsPerPerson * number of players.
+        /// Cards picked should be unique, so players don't get the same or duplicated cards
+        /// </summary>
+        /// <param name="setId"></param>
+        /// <param name="playerCount"></param>
+        /// <returns></returns>
         public async Task<List<WhiteCard>> GetRandomWhiteCards(string setId, int playerCount)
         {
             try
@@ -103,5 +117,20 @@ namespace cah.services.repositories
             }
         }
 
+
+
+        public async Task<List<string>> GetSets()
+        {
+            try
+            {
+				List<string> setList = _cards.Select(x => x.name).ToList();
+				return setList;
+			}
+            catch(Exception ex)
+            {
+                throw;
+            }
+
+        }
     }
 }

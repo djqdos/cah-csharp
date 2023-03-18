@@ -7,5 +7,8 @@ namespace cah.services.repositories
         Task<BlackCard> GetRandomBlackCard(string setId);
 
         Task<List<WhiteCard>> GetRandomWhiteCards(string setId, int playerCount);
-    }
+
+        Task<List<string>> GetSets();
+
+	}
 }
