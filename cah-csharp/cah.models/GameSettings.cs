@@ -9,5 +9,6 @@ namespace cah.models
     public static class GameSettings
     {
         public static int CardsPerPerson = 8;
+
     }
 }

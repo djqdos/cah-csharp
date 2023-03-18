@@ -49,14 +49,9 @@
     private bool isUserReadOnly = false;
     private string userName;
 
-    public ChatComponent()
-    {
-
-    }
-
     public bool IsConnected => hubConnection.State == HubConnectionState.Connected;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         userName = await localStorage.GetItemAsStringAsync("usernameCookie");
 
@@ -70,6 +65,7 @@
             .WithUrl(NavigationManager.ToAbsoluteUri($"/chathub?username={userName}"))
             .Build();
 
+        // Listen for incoming websocket standard chat messagw
         hubConnection.On<string, string>(SocketConstantHelpers.RecieveMessage, (user, message) =>
         {
             userMessages.Add(new UserMessage
@@ -83,7 +79,7 @@
             InvokeAsync(() => StateHasChanged());
         });
 
-
+        // Listen for incoming websocket notification that a new user has joined
         hubConnection.On<string, string>(SocketConstantHelpers.UserJoined, (user, message) =>
         {
             userMessages.Add(new UserMessage
@@ -98,6 +94,7 @@
         });
 
 
+        // Listen for incoming websocket notification that a user has left        
         hubConnection.On<string, string>(SocketConstantHelpers.UserLeft, (user, message) =>
         {
             userMessages.Add(new UserMessage
@@ -115,19 +112,16 @@
     }
 
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-
-
-
-    }
-
+    /// <summary>
+    /// Sends a message to the hub, to be sent to everyone
+    /// </summary>
+    /// <returns></returns>
     private async Task Send()
     {
         if (!string.IsNullOrWhiteSpace(userName) && !string.IsNullOrWhiteSpace(messageInput))
         {
-            await hubConnection.SendAsync("SendMessage", userName, messageInput);
-
+            await hubConnection.SendAsync(SocketConstantHelpers.SendMessage, userName, messageInput);
+            
             isUserReadOnly = true;
             messageInput = string.Empty;
         }

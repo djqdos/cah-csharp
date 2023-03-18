@@ -1,0 +1,37 @@
+/**************
+     User
+***************/
+.user {
+    position: relative;
+    background-color: rgb(41, 41, 41);
+    margin: .5em;
+    padding: .5em;
+    border-radius: 5px;
+    color: orange;
+
+    &.me {
+        border-bottom: 2px solid #63B7D8;
+
+        &::after {
+            position: absolute;
+            bottom: -17px;
+            left: 50%;
+            transform: translateX(-50%);
+            content: 'ME';
+            font-size: 70%;
+            text-decoration: none;
+        }
+    }
+
+    &.host {
+        &::after {
+            position: absolute;
+            bottom: -17px;
+            left: 50%;
+            transform: translateX(-50%);
+            content: 'HOST';
+            font-size: 70%;
+            text-decoration: none;
+        }
+    }
+}

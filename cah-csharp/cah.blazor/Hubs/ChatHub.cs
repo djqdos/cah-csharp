@@ -10,6 +10,7 @@ namespace cah.blazor.Hubs
 
 		public override async Task OnConnectedAsync()
 		{
+			// when a new user has joined, keep a record of that user and their connection Id.
 			string username = Context.GetHttpContext().Request.Query["username"];
 			Users.Add(Context.ConnectionId, username);
 			await SendWelcomeMessageToAllOtherUsers(Context.ConnectionId, username);
@@ -37,6 +38,7 @@ namespace cah.blazor.Hubs
 		public async Task SendMessage(string user, string message)
 		{
 			await Clients.All.SendAsync(SocketConstantHelpers.RecieveMessage, user, message);
+
 		}
 
 
@@ -47,11 +49,11 @@ namespace cah.blazor.Hubs
 		/// <param name="username"></param>
 		/// <returns></returns>
 		public async Task SendWelcomeMessageToAllOtherUsers(string newUserId, string username)
-		{
-			await Clients.AllExcept(new[] { newUserId })
-				.SendAsync(SocketConstantHelpers.UserJoined, 
-						   SocketConstantHelpers.ChatBotName, 
-						   $"{username} joined the chat!");
+		{	
+			await Clients.Others
+				.SendAsync(SocketConstantHelpers.UserJoined,
+                           SocketConstantHelpers.ChatBotName,
+                           $"{username} joined the chat!");
 		}
 
 
@@ -63,7 +65,7 @@ namespace cah.blazor.Hubs
 		/// <returns></returns>
 		public async Task SendUserDisconnectedMessage(string username)
 		{
-			await Clients.All.SendAsync(SocketConstantHelpers.UserLeft, 
+			await Clients.Others.SendAsync(SocketConstantHelpers.UserLeft, 
 										SocketConstantHelpers.ChatBotName, 
 										$"{username} has left the chat");
 		}

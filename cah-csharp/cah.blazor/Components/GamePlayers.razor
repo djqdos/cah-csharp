@@ -1,0 +1,64 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client
+@using cah.models
+@using SocketConstants
+
+@inject NavigationManager NavigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorage;
+@implements IAsyncDisposable
+
+@if (_gameUsers != null && _gameUsers.Any())
+{
+	<div class="user-list">
+		@foreach (var gu in _gameUsers)
+		{
+			<span class="user @(gu.IsHost ? "host" : string.Empty)">
+				@gu.Username
+			</span>
+		}
+	</div>
+}
+
+
+
+
+
+@code {
+	private HubConnection hubConnection;
+	private string userName;
+	private List<GameUser> _gameUsers;
+	public bool IsConnected => hubConnection.State == HubConnectionState.Connected;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			userName = await localStorage.GetItemAsStringAsync("usernameCookie");
+
+			hubConnection = new HubConnectionBuilder()
+				.WithUrl(NavigationManager.ToAbsoluteUri($"/gamehub?username={userName}"))
+				.Build();
+
+
+			hubConnection.On<List<GameUser>>(SocketConstantHelpers.GameUsers, (gameUsers) =>
+			{
+				_gameUsers = gameUsers;
+
+				InvokeAsync(() => StateHasChanged());
+			});
+
+			await hubConnection.StartAsync();
+		}	
+
+	}
+
+
+
+
+	public async ValueTask DisposeAsync()
+	{
+		if (hubConnection != null)
+		{
+			await hubConnection.DisposeAsync();
+		}
+	}
+}
