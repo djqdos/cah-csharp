@@ -4,6 +4,9 @@
 
 @inject NavigationManager NavigationManager
 @inject Blazored.LocalStorage.ILocalStorageService localStorage;
+
+@* Import the scoped HubConnection *@
+@inject HubConnection hubConnection;
 @implements IAsyncDisposable
 
 @if (_gameUsers != null && _gameUsers.Any())
@@ -11,7 +14,7 @@
 	<div class="user-list">
 		@foreach (var gu in _gameUsers)
 		{
-			<span class="user @(gu.IsHost ? "host" : string.Empty)">
+			<span class="user @(gu.IsHost ? "host" : string.Empty) @(_connectionId == gu.ConnectionId ? "me" : string.Empty)">
 				@gu.Username
 			</span>
 		}
@@ -23,10 +26,27 @@
 
 
 @code {
-	private HubConnection hubConnection;
+	//private HubConnection hubConnection;
 	private string userName;
 	private List<GameUser> _gameUsers;
 	public bool IsConnected => hubConnection.State == HubConnectionState.Connected;
+	private string _connectionId;
+
+	protected override async Task OnInitializedAsync()
+	{
+		
+		hubConnection.On<List<GameUser>>(SocketConstantHelpers.GameUsers, (gameUsers) =>
+			{
+				_gameUsers = gameUsers;
+
+				InvokeAsync(() => StateHasChanged());
+			});
+
+		if (hubConnection.State == HubConnectionState.Disconnected)
+		{
+			await hubConnection.StartAsync();
+		}
+	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
@@ -34,21 +54,14 @@
 		{
 			userName = await localStorage.GetItemAsStringAsync("usernameCookie");
 
-			hubConnection = new HubConnectionBuilder()
-				.WithUrl(NavigationManager.ToAbsoluteUri($"/gamehub?username={userName}"))
-				.Build();
+			// because the username comes from a cookie, and we've already set the hub url in program.cs,
+			// we can't append the username as a querystring
+			// so, we need another way to send the username to the back end to update it's list,
+			// matching the connection id to the username
+			await hubConnection.SendAsync(SocketConstantHelpers.UpdateUsername, userName);
 
-
-			hubConnection.On<List<GameUser>>(SocketConstantHelpers.GameUsers, (gameUsers) =>
-			{
-				_gameUsers = gameUsers;
-
-				InvokeAsync(() => StateHasChanged());
-			});
-
-			await hubConnection.StartAsync();
+			_connectionId = hubConnection.ConnectionId;
 		}	
-
 	}
 
 

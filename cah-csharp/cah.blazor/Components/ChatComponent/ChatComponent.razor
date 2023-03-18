@@ -2,6 +2,7 @@
 @using cah.models
 @using SocketConstants
 
+@inject HubConnection hubConnection;
 @inject NavigationManager NavigationManager
 @inject Blazored.LocalStorage.ILocalStorageService localStorage;
 @implements IAsyncDisposable
@@ -43,7 +44,7 @@
  
 
 @code {
-    private HubConnection hubConnection;
+    //private HubConnection hubConnection;
     private List<UserMessage> userMessages = new List<UserMessage>();    
     private string messageInput;
     private bool isUserReadOnly = false;
@@ -51,30 +52,19 @@
 
     public bool IsConnected => hubConnection.State == HubConnectionState.Connected;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+
+    protected override async Task OnInitializedAsync()
     {
-        userName = await localStorage.GetItemAsStringAsync("usernameCookie");
-
-        if (string.IsNullOrWhiteSpace(userName))
-        {
-            NavigationManager.NavigateTo("/join");
-        }
-
-
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(NavigationManager.ToAbsoluteUri($"/chathub?username={userName}"))
-            .Build();
-
         // Listen for incoming websocket standard chat messagw
         hubConnection.On<string, string>(SocketConstantHelpers.RecieveMessage, (user, message) =>
         {
             userMessages.Add(new UserMessage
-            {
-                UserName = user,
-                Message = message,
-                CurrentUser = user == userName,
-                DateSent = DateTime.Now
-            });
+                {
+                    UserName = user,
+                    Message = message,
+                    CurrentUser = user == userName,
+                    DateSent = DateTime.Now
+                });
 
             InvokeAsync(() => StateHasChanged());
         });
@@ -94,7 +84,7 @@
         });
 
 
-        // Listen for incoming websocket notification that a user has left        
+        // Listen for incoming websocket notification that a user has left
         hubConnection.On<string, string>(SocketConstantHelpers.UserLeft, (user, message) =>
         {
             userMessages.Add(new UserMessage
@@ -108,7 +98,24 @@
             InvokeAsync(() => StateHasChanged());
         });
 
-        await hubConnection.StartAsync();
+
+        if (hubConnection.State == HubConnectionState.Disconnected)
+        {
+            await hubConnection.StartAsync();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            userName = await localStorage.GetItemAsStringAsync("usernameCookie");
+
+            if (string.IsNullOrWhiteSpace(userName))
+            {
+                NavigationManager.NavigateTo("/join");
+            }                           
+        }                
     }
 
 

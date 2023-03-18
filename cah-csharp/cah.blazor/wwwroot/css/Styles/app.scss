@@ -9,6 +9,13 @@
     grid-template-columns: 2fr 1fr;
 }
 
+header {
+    display: grid;
+    grid-template-columns: 4fr 4fr 3fr;
+    grid-gap: 1em;
+    gap: 1em;
+}
+
 .center-grid {
     display: grid;
     place-content: center;

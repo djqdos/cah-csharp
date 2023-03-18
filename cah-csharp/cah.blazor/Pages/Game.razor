@@ -2,16 +2,20 @@
 @using Components.WhiteCardComponent
 @using Components.BlackCardComponent
 
+@using Microsoft.AspNetCore.SignalR.Client;
+@using cah.blazor.SocketConstants;
 @using cah.models;
 @using cah.services.services;
 @inject ICardsService _cardService
-
+@inject HubConnection hubConnection;
 
 <div class="layout">
 	<header>
 		<img src="img/iconB.png" alt="Cards against Humanity" />
 
 		<cah.blazor.Components.GamePlayers />
+
+		<button @onclick="StartGame">Start Game</button>
 	</header>
 
 	<main>
@@ -22,20 +26,22 @@
 				<div class="topgrid">
 					
 					<cah.blazor.Components.BlackCardComponent.BlackCardComponent BlackCard="_blackCard" />
-					
-					@for (var i = 0; i<_blackCard.pick; i++)
+					@if (_blackCard != null)
 					{
-						<div class="userCards 1col">
-							<div class="userCardToPick card @dropClass"
-								id="userCard-@i"
-								ondragover="event.preventDefault();"
-								ondragstart="event.dataTransfer.setData('', event.target.id);"
-								@ondrop="HandleDrop"
-								@ondragenter="HandleDragEnter"
-								@ondragleave="HandleDragLeave"								
-							></div>
-						</div>
+							@for (var i = 0; i < _blackCard.pick; i++)
+						{
+							<div class="userCards 1col">
+								<div class="userCardToPick card @dropClass"
+			 id="userCard-@i"
+			 ondragover="event.preventDefault();"
+			 ondragstart="event.dataTransfer.setData('', event.target.id);"
+								 @ondrop="HandleDrop"
+								 @ondragenter="HandleDragEnter"
+								 @ondragleave="HandleDragLeave"></div>
+							</div>
+						}
 					}
+					
 
 					<button>asdasdsa</button>
 				</div>
@@ -67,10 +73,26 @@
 	private WhiteCard _selectedCard;
 	string dropClass = "";
 
+
 	protected override async Task OnInitializedAsync()
 	{
+
 		_cards = await _cardService.GetRandomWhiteCards("CAH Base Set", 1);
 		_blackCard = await _cardService.GetRandomBlackCard("CAH Base Set");
+
+		hubConnection.On<GameUser>(SocketConstantHelpers.PersonalGameCards, (personalGameCards) =>
+		{
+			_cards = personalGameCards.WhiteCards;
+			_blackCard = personalGameCards.BlackCard;
+
+			InvokeAsync(() => StateHasChanged());
+		});
+
+
+		if (hubConnection.State == HubConnectionState.Disconnected)
+		{
+			await hubConnection.StartAsync();
+		}
 	}
 
 	private async Task HandleDrop()
@@ -91,6 +113,11 @@
 	protected async Task SelectedCard(WhiteCard _card)
 	{
 		var bob = _card;
+	}
+
+	private async Task StartGame()
+	{
+		await hubConnection.SendAsync(SocketConstantHelpers.StartGame);
 	}
 
 }

@@ -5,10 +5,24 @@ using cah.services.services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.SignalR.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+
+builder.Services.AddScoped(sp =>
+{
+    var navMan = sp.GetRequiredService<NavigationManager>();
+
+    return new HubConnectionBuilder()
+        .WithUrl(navMan.ToAbsoluteUri("/chathub"), options =>
+        {
+            // options can go here
+        })
+        .WithAutomaticReconnect()
+        .Build();
+});
 
 // add custom services here
 builder.Services.AddTransient<ICardsRepository, CardsRepository>();
@@ -46,7 +60,7 @@ app.UseRouting();
 app.MapBlazorHub();
 
 app.MapHub<ChatHub>("/chathub");
-app.MapHub<GameHub>("/gamehub");
+//app.MapHub<GameHub>("/gamehub");
 
 app.MapFallbackToPage("/_Host");
 

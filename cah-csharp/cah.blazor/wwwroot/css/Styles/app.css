@@ -172,6 +172,7 @@ body {
   padding: 0.5em;
   border-radius: 5px;
   color: orange;
+  display: inline-block;
 }
 .user.me {
   border-bottom: 2px solid #63B7D8;
@@ -198,6 +199,13 @@ body {
 .container {
   display: grid;
   grid-template-columns: 2fr 1fr;
+}
+
+header {
+  display: grid;
+  grid-template-columns: 4fr 4fr 3fr;
+  grid-gap: 1em;
+  gap: 1em;
 }
 
 .center-grid {
