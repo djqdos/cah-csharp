@@ -32,12 +32,23 @@
 		</div>
 	}
 
+
+	if (_gameSettings != null
+		&& (_gameSettings.GameState == GameState.Initial ||
+		(_gameSettings.GameState == GameState.StartGame && !AmIHost))
+
+		&& string.IsNullOrWhiteSpace(_gameSettings.SelectedSet))
+	{
+		<p>Waiting for Host to Select a Deck</p>
+	}
+
 	if(_gameSettings != null && _gameSettings.GameState == GameState.SetPicked)
 	{
 		<span>Selected set: @_gameSettings.SelectedSet</span>
 		<br />
 		@if (AmIHost)
 		{
+			<br />
 			<button @onclick="DealCards">Deal Cards</button>
 		}
 	}

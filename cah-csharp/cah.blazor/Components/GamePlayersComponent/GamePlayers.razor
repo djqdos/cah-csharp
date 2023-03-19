@@ -14,9 +14,12 @@
 	<div class="user-list">
 		@foreach (var gu in _gameSettings.GameUsers)
 		{
-			<span class="user @(gu.IsHost ? "host" : string.Empty) @(_connectionId == gu.ConnectionId ? "me" : string.Empty)">
-				@gu.Username
-			</span>
+			if (!string.IsNullOrWhiteSpace(gu.Username))
+			{
+				<span class="user @(gu.IsHost ? "host" : string.Empty) @(_connectionId == gu.ConnectionId ? "me" : string.Empty)">
+					@gu.Username
+				</span>
+			}
 		}
 	</div>
 
@@ -53,24 +56,11 @@
 			await hubConnection.StartAsync();
 		}
 
+
+		_connectionId = hubConnection.ConnectionId;
 		await base.OnInitializedAsync();
 	}
 
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (firstRender)
-		{
-			userName = await localStorage.GetItemAsStringAsync("usernameCookie");
-
-			// because the username comes from a cookie, and we've already set the hub url in program.cs,
-			// we can't append the username as a querystring
-			// so, we need another way to send the username to the back end to update it's list,
-			// matching the connection id to the username
-			await hubConnection.SendAsync(SocketConstantHelpers.UpdateUsername, userName);
-
-			_connectionId = hubConnection.ConnectionId;
-		}	
-	}
 
 	private async Task ResetGameData()
 	{

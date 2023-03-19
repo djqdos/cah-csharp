@@ -2,20 +2,42 @@
   font-family: "HelveticaNeueBold";
   src: url(../../Fonts/HelveticaNeueBold.ttf);
 }
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+body, html {
+  height: 100vh;
+}
+
 body {
   padding: 0;
   margin: 0;
   background-color: #3d3d3d;
   color: white;
-  font-size: 1.4em;
+  font-size: 1em;
   font-family: HelveticaNeueBold;
 }
 
 .layout {
+  display: grid;
   padding: 1em;
+  grid-template-rows: auto 1fr;
+  overflow: auto;
+  height: inherit;
 }
 .layout img {
   height: 60px;
+}
+.layout main {
+  display: grid;
+}
+.layout .container {
+  display: grid;
+  place-content: center;
+  grid-template-columns: 3fr 1fr;
 }
 
 .card {
@@ -26,6 +48,7 @@ body {
   padding: 1em;
   border-radius: 5px;
   position: relative;
+  text-align: left;
 }
 
 .card img {
@@ -196,11 +219,6 @@ body {
   text-decoration: none;
 }
 
-.container {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-}
-
 header {
   display: grid;
   grid-template-columns: 4fr 4fr 3fr;
@@ -211,6 +229,7 @@ header {
 .center-grid {
   display: grid;
   place-content: center;
+  text-align: center;
 }
 
 .grid {
@@ -239,6 +258,14 @@ header {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-gap: 1rem;
+}
+
+input[type=text], input[type=submit], select {
+  padding: 0.5em;
+}
+
+button {
+  padding: 0.5em;
 }
 
 /* Blazor error stuffs */

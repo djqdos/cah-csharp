@@ -7,6 +7,7 @@
 @using cah.blazor.SocketConstants;
 @using cah.models;
 @using cah.services.services;
+@inject Blazored.LocalStorage.ILocalStorageService localStorage;
 @inject ICardsService _cardService
 @inject HubConnection hubConnection;
 
@@ -67,7 +68,24 @@
 			await hubConnection.StartAsync();
 		}
 
+		await hubConnection.SendAsync(SocketConstantHelpers.GetGameSettings);
 		_cardSets = await _cardService.GetSets();
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			var userName = await localStorage.GetItemAsStringAsync("usernameCookie");
+
+			// because the username comes from a cookie, and we've already set the hub url in program.cs,
+			// we can't append the username as a querystring
+			// so, we need another way to send the username to the back end to update it's list,
+			// matching the connection id to the username
+			await hubConnection.SendAsync(SocketConstantHelpers.UpdateUsername, userName);
+
+
+		}
 	}
 
 	private async Task HandleDrop()

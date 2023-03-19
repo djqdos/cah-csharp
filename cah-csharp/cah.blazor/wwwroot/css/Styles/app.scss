@@ -4,11 +4,6 @@
 @import "chat.scss";
 @import "gameusers.scss";
 
-.container {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-}
-
 header {
     display: grid;
     grid-template-columns: 4fr 4fr 3fr;
@@ -19,6 +14,7 @@ header {
 .center-grid {
     display: grid;
     place-content: center;
+    text-align:center;
 }
 
 .grid {
@@ -52,7 +48,13 @@ header {
     grid-gap: 1rem;
 }
 
+input[type="text"], input[type="submit"], select {
+    padding: .5em;
+}
 
+button {
+    padding: .5em;
+}
 
 
 
