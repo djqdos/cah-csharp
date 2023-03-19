@@ -6,8 +6,19 @@ using System.Threading.Tasks;
 
 namespace cah.models
 {
-    public static class GameSettings
+    public class GameSettings
     {
-        public static int CardsPerPerson = 8;
+        public int CardsPerPerson = 8;
+
+        public bool GameStarted {  get; set; }   
+
+        public string GameSet { get; set; }  
+        
+        public List<GameUser> GameUsers { get; set; } = new List<GameUser>();
+
+		public string SelectedSet { get; set; }
+
+		public GameState GameState { get; set; } 
+        
     }
 }

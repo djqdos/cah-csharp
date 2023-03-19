@@ -162,9 +162,50 @@ body {
   color: green;
 }
 
+/**************
+     User
+***************/
+.user {
+  position: relative;
+  background-color: rgb(41, 41, 41);
+  margin: 0.5em;
+  padding: 0.5em;
+  border-radius: 5px;
+  color: orange;
+  display: inline-block;
+}
+.user.me {
+  border-bottom: 2px solid #63B7D8;
+}
+.user.me::after {
+  position: absolute;
+  bottom: -17px;
+  left: 50%;
+  transform: translateX(-50%);
+  content: "ME";
+  font-size: 70%;
+  text-decoration: none;
+}
+.user.host::after {
+  position: absolute;
+  bottom: -17px;
+  left: 50%;
+  transform: translateX(-50%);
+  content: "HOST";
+  font-size: 70%;
+  text-decoration: none;
+}
+
 .container {
   display: grid;
   grid-template-columns: 2fr 1fr;
+}
+
+header {
+  display: grid;
+  grid-template-columns: 4fr 4fr 3fr;
+  grid-gap: 1em;
+  gap: 1em;
 }
 
 .center-grid {

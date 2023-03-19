@@ -1,0 +1,127 @@
+﻿@using Microsoft.AspNetCore.SignalR.Client
+@using cah.models
+@using SocketConstants
+@using cah.services.services;
+
+@inject NavigationManager NavigationManager
+@inject ICardsService _cardService
+
+@* Import the scoped HubConnection *@
+@inject HubConnection hubConnection;
+@*@implements IAsyncDisposable*@
+
+
+@if (_cardSets.Any())
+{
+
+	if (_gameSettings != null 
+		&& (_gameSettings.GameState == GameState.Initial ||
+			(_gameSettings.GameState == GameState.StartGame && AmIHost))
+		
+		&& string.IsNullOrWhiteSpace(_gameSettings.SelectedSet))
+	{
+		
+		<div>
+			<select @onchange="OnSelectedSetChange">
+				@foreach (var set in _cardSets)
+				{
+					<option value="@set">@set</option>
+				}
+			</select>
+			<button @onclick="PickSet" value="Pick Set">Pick Set</button>
+		</div>
+	}
+
+	if(_gameSettings != null && _gameSettings.GameState == GameState.SetPicked)
+	{
+		<span>Selected set: @_gameSettings.SelectedSet</span>
+		<br />
+		@if (AmIHost)
+		{
+			<button @onclick="DealCards">Deal Cards</button>
+		}
+	}
+	
+	
+}
+
+
+
+@code {
+	private List<string> _cardSets = new List<string>();
+	private GameSettings _gameSettings;
+	private string _connectionId;
+
+	private string selectedSet;
+	private bool AmIHost = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await hubConnection.SendAsync(SocketConstantHelpers.GetGameSettings);
+
+		hubConnection.On<List<string>>(SocketConstantHelpers.CardSet, (cardSets) =>
+		{
+			_cardSets = cardSets;
+
+			InvokeAsync(() => StateHasChanged());
+		});
+
+		hubConnection.On<GameSettings>(SocketConstantHelpers.GameSettings, (gameSettings) =>
+		{
+			_gameSettings = gameSettings;
+
+			GameUser gu = _gameSettings.GameUsers.Where(x => x.IsHost).FirstOrDefault();
+			if (gu?.ConnectionId == _connectionId)
+			{
+				AmIHost = true;
+			}
+
+			InvokeAsync(() => StateHasChanged());
+		});
+
+		if (hubConnection.State == HubConnectionState.Disconnected)
+		{
+			await hubConnection.StartAsync();
+		}
+
+		_connectionId = hubConnection.ConnectionId;
+
+		_cardSets = await _cardService.GetSets();
+		selectedSet = _cardSets.FirstOrDefault();
+
+	}
+
+
+	/// <summary>
+	/// Sets the selectedSet variable to the current dropdown value, when user changes
+	/// </summary>
+	/// <param name="e"></param>
+	private void OnSelectedSetChange(ChangeEventArgs e)
+	{
+		selectedSet = e.Value.ToString();
+	}
+
+
+	private async Task DealCards()
+	{
+		await hubConnection.SendAsync("SetDealCardsState");
+	}
+
+
+	/// <summary>
+	/// Publishes a message to server that a set has been chosen
+	/// </summary>
+	/// <returns></returns>
+	private async Task PickSet()
+	{
+		await hubConnection.SendAsync(SocketConstantHelpers.PickSet, selectedSet);
+	}
+
+	//public async ValueTask DisposeAsync()
+	//{
+	//	if (hubConnection != null)
+	//	{
+	//		await hubConnection.DisposeAsync();
+	//	}
+	//}
+}

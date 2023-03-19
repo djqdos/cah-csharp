@@ -2,9 +2,10 @@
 @using cah.models
 @using SocketConstants
 
+@inject HubConnection hubConnection;
 @inject NavigationManager NavigationManager
 @inject Blazored.LocalStorage.ILocalStorageService localStorage;
-@implements IAsyncDisposable
+@*@implements IAsyncDisposable*@
 
 
         <div class="chat-global-container">    
@@ -43,47 +44,32 @@
  
 
 @code {
-    private HubConnection hubConnection;
+    //private HubConnection hubConnection;
     private List<UserMessage> userMessages = new List<UserMessage>();    
     private string messageInput;
     private bool isUserReadOnly = false;
     private string userName;
 
-    public ChatComponent()
-    {
-
-    }
-
     public bool IsConnected => hubConnection.State == HubConnectionState.Connected;
+
 
     protected override async Task OnInitializedAsync()
     {
-        userName = await localStorage.GetItemAsStringAsync("usernameCookie");
-
-        if (string.IsNullOrWhiteSpace(userName))
-        {
-            NavigationManager.NavigateTo("/join");
-        }
-
-
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(NavigationManager.ToAbsoluteUri($"/chathub?username={userName}"))
-            .Build();
-
+        // Listen for incoming websocket standard chat messagw
         hubConnection.On<string, string>(SocketConstantHelpers.RecieveMessage, (user, message) =>
         {
             userMessages.Add(new UserMessage
-            {
-                UserName = user,
-                Message = message,
-                CurrentUser = user == userName,
-                DateSent = DateTime.Now
-            });
+                {
+                    UserName = user,
+                    Message = message,
+                    CurrentUser = user == userName,
+                    DateSent = DateTime.Now
+                });
 
             InvokeAsync(() => StateHasChanged());
         });
 
-
+        // Listen for incoming websocket notification that a new user has joined
         hubConnection.On<string, string>(SocketConstantHelpers.UserJoined, (user, message) =>
         {
             userMessages.Add(new UserMessage
@@ -98,6 +84,7 @@
         });
 
 
+        // Listen for incoming websocket notification that a user has left
         hubConnection.On<string, string>(SocketConstantHelpers.UserLeft, (user, message) =>
         {
             userMessages.Add(new UserMessage
@@ -111,33 +98,47 @@
             InvokeAsync(() => StateHasChanged());
         });
 
-        await hubConnection.StartAsync();
-    }
 
+        if (hubConnection.State == HubConnectionState.Disconnected)
+        {
+            await hubConnection.StartAsync();
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            userName = await localStorage.GetItemAsStringAsync("usernameCookie");
 
-
-
+            if (string.IsNullOrWhiteSpace(userName))
+            {
+                NavigationManager.NavigateTo("/join");
+            }                           
+        }                
     }
 
+
+    /// <summary>
+    /// Sends a message to the hub, to be sent to everyone
+    /// </summary>
+    /// <returns></returns>
     private async Task Send()
     {
         if (!string.IsNullOrWhiteSpace(userName) && !string.IsNullOrWhiteSpace(messageInput))
         {
-            await hubConnection.SendAsync("SendMessage", userName, messageInput);
-
+            await hubConnection.SendAsync(SocketConstantHelpers.SendMessage, userName, messageInput);
+            
             isUserReadOnly = true;
             messageInput = string.Empty;
         }
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (hubConnection != null)
-        {
-            await hubConnection.DisposeAsync();
-        }
-    }
+    //public async ValueTask DisposeAsync()
+    //{
+    //    if (hubConnection != null)
+    //    {
+    //        await hubConnection.DisposeAsync();
+    //    }
+    //}
 }

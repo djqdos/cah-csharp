@@ -27,5 +27,11 @@ namespace cah.services.services
         {
             return await _cardsRepository.GetRandomWhiteCards(setId, playerCount);
         }
-    }
+
+        public async Task<List<string>> GetSets()
+        {
+            return await _cardsRepository.GetSets();
+        }
+
+	}
 }

@@ -1,74 +1,73 @@
 ﻿@page "/game"
+@layout MainLayout
 @using Components.WhiteCardComponent
 @using Components.BlackCardComponent
 
+@using Microsoft.AspNetCore.SignalR.Client;
+@using cah.blazor.SocketConstants;
 @using cah.models;
 @using cah.services.services;
 @inject ICardsService _cardService
+@inject HubConnection hubConnection;
 
 
-<div class="layout">
-	<header>
-		<img src="img/iconB.png" alt="Cards against Humanity" />
-	</header>
-
-	<main>
-		<div class="container">
-
-			<div id="game" class="center-grid">
-			<div class="dealtCards">
-				<div class="topgrid">
-					
-					<cah.blazor.Components.BlackCardComponent.BlackCardComponent BlackCard="_blackCard" />
-					
-					@for (var i = 0; i<_blackCard.pick; i++)
-					{
-						<div class="userCards 1col">
-							<div class="userCardToPick card @dropClass"
-								id="userCard-@i"
-								ondragover="event.preventDefault();"
-								ondragstart="event.dataTransfer.setData('', event.target.id);"
-								@ondrop="HandleDrop"
-								@ondragenter="HandleDragEnter"
-								@ondragleave="HandleDragLeave"								
-							></div>
-						</div>
-					}
-
-					<button>asdasdsa</button>
-				</div>
-				@if (_cards != null)
-				{
-					<div class="white-card-container">
-
-						@foreach (var card in _cards)
-						{
-							<cah.blazor.Components.WhiteCardComponent.WhiteCardComponent 
-								WhiteCard="card" 
-								OnHandleDragStart="SelectedCard"/>
-						}
-
-					</div>
-				}
-			</div>
-			</div>
-
-			<cah.blazor.Components.ChatComponent.ChatComponent />
+<div id="game" class="center-grid">
+	
+	@if (_gameSettings != null && _gameSettings.GameState == GameState.Initial)
+	{
+		<div>
+			<button @onclick="StartGame">Start Game</button>
 		</div>
-	</main>
+	}
+
+
+	@if (_gameSettings != null && (_gameSettings.GameState == GameState.StartGame || _gameSettings.GameState == GameState.SetPicked))
+	{
+		<div>
+			<cah.blazor.Components.SelectCardSetComponent.SelectCardSetComponent />
+		</div>
+	}
+
+
+	@if (_gameSettings != null && _gameSettings.GameState == GameState.CardsDealt)
+	{
+		<cah.blazor.Components.DealtCardsComponent.DealtCardsComponent />
+	}
+
+
 </div>
 
+<cah.blazor.Components.ChatComponent.ChatComponent />
 
 @code {
 	private List<WhiteCard> _cards;
 	private BlackCard _blackCard;
 	private WhiteCard _selectedCard;
+
+	private List<string> _cardSets;
 	string dropClass = "";
+	private GameSettings _gameSettings;
 
 	protected override async Task OnInitializedAsync()
 	{
-		_cards = await _cardService.GetRandomWhiteCards("CAH Base Set", 1);
-		_blackCard = await _cardService.GetRandomBlackCard("CAH Base Set");
+
+		//_cards = await _cardService.GetRandomWhiteCards("CAH Base Set", 1);
+		//_blackCard = await _cardService.GetRandomBlackCard("CAH Base Set");
+
+		hubConnection.On<GameSettings>(SocketConstantHelpers.GameSettings, (gameSettings) =>
+		{
+			_gameSettings = gameSettings;
+
+			InvokeAsync(() => StateHasChanged());
+		});
+
+
+		if (hubConnection.State == HubConnectionState.Disconnected)
+		{
+			await hubConnection.StartAsync();
+		}
+
+		_cardSets = await _cardService.GetSets();
 	}
 
 	private async Task HandleDrop()
@@ -91,4 +90,8 @@
 		var bob = _card;
 	}
 
+	private async Task StartGame()
+	{
+		await hubConnection.SendAsync(SocketConstantHelpers.StartGame);
+	}
 }

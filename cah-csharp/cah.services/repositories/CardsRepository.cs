@@ -27,6 +27,11 @@ namespace cah.services.repositories
         }
 
 
+        /// <summary>
+        /// Gets a random black card from the selected set.
+        /// </summary>
+        /// <param name="setId"></param>
+        /// <returns></returns>
         public async Task<BlackCard> GetRandomBlackCard(string setId)
         {
             try
@@ -55,10 +60,22 @@ namespace cah.services.repositories
         }
 
 
+
+        /// <summary>
+        /// Gets random white cards from the selected set.
+        /// Picks GameSettings.CardsPerPerson * number of players.
+        /// Cards picked should be unique, so players don't get the same or duplicated cards
+        /// </summary>
+        /// <param name="setId"></param>
+        /// <param name="playerCount"></param>
+        /// <returns></returns>
         public async Task<List<WhiteCard>> GetRandomWhiteCards(string setId, int playerCount)
         {
             try
             {
+                int cardsPerPerson = 8;
+
+
                 if (playerCount <= 0) throw new Exception("Player count must be greater than 0");
                 if (string.IsNullOrWhiteSpace(setId)) throw new Exception("Set Id must be provided");
 
@@ -78,7 +95,7 @@ namespace cah.services.repositories
                 // so that each user gets distinct cards
                 for (var i = 1; i <= playerCount; i++)
                 {
-                    for (var innerLoop = 0; innerLoop < GameSettings.CardsPerPerson; innerLoop++)
+                    for (var innerLoop = 0; innerLoop < cardsPerPerson; innerLoop++)
                     {
                         Random r = new Random();
                         int randNum = r.Next(min, max + 1);
@@ -103,5 +120,20 @@ namespace cah.services.repositories
             }
         }
 
+
+
+        public async Task<List<string>> GetSets()
+        {
+            try
+            {
+				List<string> setList = _cards.Select(x => x.name).ToList();
+				return setList;
+			}
+            catch(Exception ex)
+            {
+                throw;
+            }
+
+        }
     }
 }
