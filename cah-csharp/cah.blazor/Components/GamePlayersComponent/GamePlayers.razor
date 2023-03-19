@@ -7,17 +7,25 @@
 
 @* Import the scoped HubConnection *@
 @inject HubConnection hubConnection;
-@implements IAsyncDisposable
+@*@implements IAsyncDisposable*@
 
-@if (_gameUsers != null && _gameUsers.Any())
+@if (_gameSettings != null && _gameSettings.GameUsers != null && _gameSettings.GameUsers.Any())
 {
 	<div class="user-list">
-		@foreach (var gu in _gameUsers)
+		@foreach (var gu in _gameSettings.GameUsers)
 		{
 			<span class="user @(gu.IsHost ? "host" : string.Empty) @(_connectionId == gu.ConnectionId ? "me" : string.Empty)">
 				@gu.Username
 			</span>
 		}
+	</div>
+
+	<div>
+		Debug:
+		@_gameSettings.GameState
+		<br />
+		<button @onclick="ResetGameData">Reset Game</button>
+
 	</div>
 }
 
@@ -26,26 +34,26 @@
 
 
 @code {
-	//private HubConnection hubConnection;
 	private string userName;
-	private List<GameUser> _gameUsers;
+	private GameSettings _gameSettings;
 	public bool IsConnected => hubConnection.State == HubConnectionState.Connected;
 	private string _connectionId;
 
 	protected override async Task OnInitializedAsync()
-	{
-		
-		hubConnection.On<List<GameUser>>(SocketConstantHelpers.GameUsers, (gameUsers) =>
-			{
-				_gameUsers = gameUsers;
+	{		
+		hubConnection.On<GameSettings>(SocketConstantHelpers.GameSettings, (gameSettings) =>
+		{
+			_gameSettings = gameSettings;
 
-				InvokeAsync(() => StateHasChanged());
-			});
+			InvokeAsync(() => StateHasChanged());
+		});
 
 		if (hubConnection.State == HubConnectionState.Disconnected)
 		{
 			await hubConnection.StartAsync();
 		}
+
+		await base.OnInitializedAsync();
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -64,14 +72,17 @@
 		}	
 	}
 
-
-
-
-	public async ValueTask DisposeAsync()
+	private async Task ResetGameData()
 	{
-		if (hubConnection != null)
-		{
-			await hubConnection.DisposeAsync();
-		}
+		await hubConnection.SendAsync(SocketConstantHelpers.ResetGameData);
 	}
+
+
+	//public async ValueTask DisposeAsync()
+	//{
+	//	if (hubConnection != null)
+	//	{
+	//		await hubConnection.DisposeAsync();
+	//	}
+	//}
 }

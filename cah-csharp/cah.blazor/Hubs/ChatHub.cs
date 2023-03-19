@@ -1,6 +1,7 @@
 ﻿using cah.blazor.SocketConstants;
 using cah.models;
 using cah.services.services;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.SignalR;
 
 
@@ -8,15 +9,15 @@ namespace cah.blazor.Hubs
 {
 	public class ChatHub : Hub
 	{
+		private static GameSettings _gameSettings = new GameSettings { GameState = GameState.Initial};
+
 		private static Dictionary<string, string> Users = new Dictionary<string, string>();
 
-		private static List<GameUser> _gameUsers = new List<GameUser>();
 		private readonly ICardsService _cardsService;
 
 		public ChatHub(ICardsService cardService)
 		{
 			_cardsService = cardService;
-
 		}
 
         public override async Task OnConnectedAsync()
@@ -29,10 +30,10 @@ namespace cah.blazor.Hubs
 		{
 			string username = Users.FirstOrDefault(x => x.Key == Context.ConnectionId).Value;
 
-			GameUser gu = _gameUsers.FirstOrDefault(x => x.ConnectionId == Context.ConnectionId);
+			GameUser gu = _gameSettings.GameUsers.FirstOrDefault(x => x.ConnectionId == Context.ConnectionId);
 			if (gu != null)
 			{
-				_gameUsers.Remove(gu);
+				_gameSettings.GameUsers.Remove(gu);
 			}
 
 			await SendUserDisconnectedMessage(username);
@@ -44,7 +45,7 @@ namespace cah.blazor.Hubs
 
 		public async Task SendGameUsers()
 		{
-			await Clients.All.SendAsync(SocketConstantHelpers.GameUsers, _gameUsers);
+			await Clients.All.SendAsync(SocketConstantHelpers.GameSettings, _gameSettings);
 		}
 
 
@@ -69,10 +70,10 @@ namespace cah.blazor.Hubs
 		{
 
 			// game user
-			GameUser gu = _gameUsers.FirstOrDefault(x => x.ConnectionId == Context.ConnectionId);
+			GameUser gu = _gameSettings.GameUsers.FirstOrDefault(x => x.ConnectionId == Context.ConnectionId);
 			if (gu == null)
 			{
-				_gameUsers.Add(new GameUser
+				_gameSettings.GameUsers.Add(new GameUser
 				{
 					Username = username,
 					ConnectionId = Context.ConnectionId
@@ -129,24 +130,84 @@ namespace cah.blazor.Hubs
 
 
 		#region GAME
+
+
+		public async Task ResetGameData()
+		{
+			_gameSettings.GameStarted = false;
+			_gameSettings.GameSet = string.Empty;
+			_gameSettings.SelectedSet = string.Empty;
+			foreach (var gu in _gameSettings.GameUsers)
+			{
+				gu.IsHost = false;
+			}
+			_gameSettings.GameState = GameState.Initial;
+			await SendGameUsers();
+		}
+
+
+		public async Task GetGameSettings()
+		{
+			await Clients.All.SendAsync(SocketConstantHelpers.GameSettings, _gameSettings);
+		}
+
+
+		public async Task GetCardSets()
+		{
+			List<string> cardSets = await _cardsService.GetSets();
+			await Clients.Caller.SendAsync(SocketConstantHelpers.CardSet, cardSets);
+		}
+
+
+		public async Task PickSet(string selectedSet)
+		{
+			_gameSettings.SelectedSet = selectedSet;
+			_gameSettings.GameState = GameState.SetPicked;
+			await SendGameUsers();
+		}
+
+
 		public async Task StartGame()
 		{
-			var whiteCards = await _cardsService.GetRandomWhiteCards("CAH Base Set", _gameUsers.Count);
-			var blackCard = await _cardsService.GetRandomBlackCard("CAH Base Set");
+			GameUser gu = _gameSettings.GameUsers.FirstOrDefault(x => x.ConnectionId == Context.ConnectionId);
+			_gameSettings.GameState = GameState.StartGame;
+			gu.IsHost = true;
+			await SendGameUsers();	
+		}
 
-			var chunkedWhiteCards = whiteCards.Chunk(GameSettings.CardsPerPerson).ToList();
+
+		public async Task SetDealCardsState()
+		{
+			_gameSettings.GameState = GameState.CardsDealt;
+			await SendGameUsers();
+		}
+
+		/// <summary>
+		/// Selects the cards, and deals them to the players
+		/// </summary>
+		/// <returns></returns>
+		public async Task DealCards()
+		{
+			_gameSettings.GameState = GameState.CardsDealt;
+			string selectedSet = "CAH Base Set";
+			if (_gameSettings != null && !string.IsNullOrWhiteSpace(_gameSettings.SelectedSet)) {
+				selectedSet = _gameSettings.SelectedSet;
+			}
+			_gameSettings.GameState = GameState.CardsDealt;
+
+			var whiteCards = await _cardsService.GetRandomWhiteCards(selectedSet, _gameSettings.GameUsers.Count);
+			var blackCard = await _cardsService.GetRandomBlackCard(selectedSet);
+
+			var chunkedWhiteCards = whiteCards.Chunk(_gameSettings.CardsPerPerson).ToList();
 			
 
-			foreach (var gameUser in _gameUsers.Select((item, index) => new { index, item }))
+			foreach (var gameUser in _gameSettings.GameUsers.Select((item, index) => new { index, item }))
 			{
 				gameUser.item.WhiteCards = chunkedWhiteCards[gameUser.index].ToList();
 				gameUser.item.BlackCard = blackCard;
 				await Clients.Client(gameUser.item.ConnectionId).SendAsync(SocketConstantHelpers.PersonalGameCards, gameUser.item);
-			}
-			
-			
-
-
+			}	
+			await SendGameUsers();	
 		}
 		#endregion
 

@@ -4,6 +4,8 @@
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>0d65a09a-6f94-4a8d-83d8-7c10eff84238</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,7 +20,7 @@
   <ItemGroup>
     <None Include="compilerconfig.json" />
     <None Include="Assets\cards.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
     <None Include="wwwroot\css\Styles\card.scss" />
   </ItemGroup>
@@ -26,11 +28,16 @@
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.4" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\cah.models\cah.models.csproj" />
     <ProjectReference Include="..\cah.services\cah.services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Components\NewFolder\" />
   </ItemGroup>
 
 </Project>

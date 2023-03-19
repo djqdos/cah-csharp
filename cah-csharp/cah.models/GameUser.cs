@@ -14,9 +14,11 @@ namespace cah.models
 
         public BlackCard BlackCard { get; set; }
 
-        public List<WhiteCard> WhiteCards { get; set; } 
+        public List<WhiteCard> WhiteCards { get; set; }  = new List<WhiteCard>();
 
         public bool IsHost { get; set; }    
+
+        public List<WhiteCard> SubmittedCards { get; set; } = new List<WhiteCard>();
 
     }
 }

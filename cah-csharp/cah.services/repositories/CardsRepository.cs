@@ -73,6 +73,9 @@ namespace cah.services.repositories
         {
             try
             {
+                int cardsPerPerson = 8;
+
+
                 if (playerCount <= 0) throw new Exception("Player count must be greater than 0");
                 if (string.IsNullOrWhiteSpace(setId)) throw new Exception("Set Id must be provided");
 
@@ -92,7 +95,7 @@ namespace cah.services.repositories
                 // so that each user gets distinct cards
                 for (var i = 1; i <= playerCount; i++)
                 {
-                    for (var innerLoop = 0; innerLoop < GameSettings.CardsPerPerson; innerLoop++)
+                    for (var innerLoop = 0; innerLoop < cardsPerPerson; innerLoop++)
                     {
                         Random r = new Random();
                         int randNum = r.Next(min, max + 1);

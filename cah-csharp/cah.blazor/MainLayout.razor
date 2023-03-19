@@ -1,3 +1,15 @@
 ﻿@inherits LayoutComponentBase
 
-<main> @Body </main>
+<div class="layout">
+	<header>
+		<img src="img/iconB.png" alt="Cards against Humanity" />
+
+		<cah.blazor.Components.GamePlayersComponent.GamePlayers />
+	</header>
+
+	<main>
+		<div class="container">			
+			@Body
+		</div>
+	</main>
+</div>

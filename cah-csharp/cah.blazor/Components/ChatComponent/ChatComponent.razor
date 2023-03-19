@@ -5,7 +5,7 @@
 @inject HubConnection hubConnection;
 @inject NavigationManager NavigationManager
 @inject Blazored.LocalStorage.ILocalStorageService localStorage;
-@implements IAsyncDisposable
+@*@implements IAsyncDisposable*@
 
 
         <div class="chat-global-container">    
@@ -134,11 +134,11 @@
         }
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (hubConnection != null)
-        {
-            await hubConnection.DisposeAsync();
-        }
-    }
+    //public async ValueTask DisposeAsync()
+    //{
+    //    if (hubConnection != null)
+    //    {
+    //        await hubConnection.DisposeAsync();
+    //    }
+    //}
 }

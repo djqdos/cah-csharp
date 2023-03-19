@@ -66,7 +66,7 @@ namespace cah.tests
 
             // Assert
             response.Should().NotBeNull();
-            response.Count.Should().Be(playerCount * GameSettings.CardsPerPerson);
+            response.Count.Should().Be(playerCount * 8);
             response.Should().OnlyHaveUniqueItems();
         }
 
